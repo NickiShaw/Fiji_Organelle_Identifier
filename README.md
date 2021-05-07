@@ -8,7 +8,7 @@ Open Fiji and navigate to `help > Update...`, when the `ImageJ Updater` window o
 ![Manage update sites](https://github.com/NickiShaw/Fiji_Organelle_Identifier/blob/main/Images/update.jpg)
 Select `IJ-OpenCV-Plugins` from the menu and close the `Manage update sites` window, select `Apply Changes` in the `ImageJ Updater` window.
 
-Download the "Organelle_Finder" folder, then move the entire folder into the plugins folder. The path you are looking for should look like: `C:\Users\name\Fiji.app\plugins`.
+Download the [Organelle_Finder](https://github.com/NickiShaw/Fiji_Organelle_Identifier/tree/main/Organelle_Finder) folder, then move the entire folder into the plugins folder. The path you are looking for should look like: `C:\Users\name\Fiji.app\plugins`.
 
 Restart Fiji, now the "Organelle_Finder" should be located in the plugins dropdown in the menu (scroll to the bottom section of Plugins).
 

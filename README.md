@@ -30,3 +30,6 @@ Please refer to the [wiki](https://github.com/NickiShaw/Fiji_Organelle_Identifie
 If you encounter any bugs please email the bug report and the image to *nashaw@uwaterloo.ca* for troubleshooting help. Please also indicate in the email if this request is urgent.
 
 If you would like new features please also email *nashaw@uwaterloo.ca* with as much detail as possible for what you would like developed. Please also indicate in the email if this request is urgent.
+
+# Workflow (temp.)
+![Manage update sites](https://github.com/NickiShaw/Fiji_Organelle_Identifier/blob/main/Images/workflow.jpg)

@@ -19,6 +19,9 @@ Restart Fiji, now the "Organelle_Finder" should be located in the plugins dropdo
 
 You must have an image open for the program to run, the program automatically takes the top-most image available (i.e. the most recently clicked-on image).
 
+## Features
+
+Please refer to the [wiki](https://github.com/NickiShaw/Fiji_Organelle_Identifier/wiki) for details on usage.
 
 ## Bugs/New features
 

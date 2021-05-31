@@ -17,6 +17,22 @@ Download the [Organelle_Finder](https://github.com/NickiShaw/Fiji_Organelle_Iden
 
 Restart Fiji, now the "Organelle_Finder" should be located in the plugins dropdown in the menu. In the Fiji menu go to Plugins > Organelle_Finder and select `OrganelleFinder Initialize`, this will run an initialization which will point the scripts to the location of the 'Organelle_Finder' folder you created. If the folder cannot be located automatically, you will have to navigate to the 'Organelle_Finder' folder in the popup window (example shown below).
 
+![Initialization manual search window](https://github.com/NickiShaw/Fiji_Organelle_Identifier/blob/main/Images/Initializer_window_1.jpg)
+
+In this case toggle to the 'Organelle_Finder' as shown below:
+![Initialization manual search window in directory](https://github.com/NickiShaw/Fiji_Organelle_Identifier/blob/main/Images/Initializer_window_2.jpg)
+
+If the initialization is successful, the following window will appear:
+![Initialization passed window](https://github.com/NickiShaw/Fiji_Organelle_Identifier/blob/main/Images/Initializer_passed.jpg)
+
+If the initialization failed, the following window will appear. This indicates that the file path you gave was incorrect, or not all the necessary files are in the 'Organelle_Finder' folder. Check that the colder contains:
+1. OrganelleFinder_helper.py
+2. Run_OrganelleFinder.py
+
+![Initialization passed window](https://github.com/NickiShaw/Fiji_Organelle_Identifier/blob/main/Images/Initializer_failed.jpg)
+
+
+
 You must have an image open for the program to run, the program automatically takes the top-most image available (i.e. the most recently clicked-on image).
 
 :bangbang: **The input image must be 8-bit (grayscale)** :bangbang:

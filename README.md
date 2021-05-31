@@ -7,7 +7,7 @@ To learn more about the tool and all it's features please refer to the [wiki](ht
 
 
 ## Installation
-First make sure that Fiji is installed (find the install [here](https://imagej.net/Fiji/Downloads), make note of the location the download as you will need to add the files to this area (below this path is `C:\Users\name\Fiji.app`).
+First make sure that Fiji is installed (find the install [here](https://imagej.net/Fiji/Downloads), make note of the location the download as you will need to add the files to this area (below this path is `C:\Users\name\Fiji.app`). Note that 'ImageJ' on it's own is not sufficient to run this program.
 
 Open Fiji and navigate to `help > Update...`, when the `ImageJ Updater` window opens select `Manage update sites`, then the below window should open:
 ![Manage update sites](https://github.com/NickiShaw/Fiji_Organelle_Identifier/blob/main/Images/update.jpg)
@@ -15,7 +15,7 @@ Select `IJ-OpenCV-Plugins` from the menu and close the `Manage update sites` win
 
 Download the [Organelle_Finder](https://github.com/NickiShaw/Fiji_Organelle_Identifier/tree/main/Organelle_Finder) folder, then move the entire folder into the plugins folder. The path you are looking for should look like: `C:\Users\name\Fiji.app\plugins`.
 
-Restart Fiji, now the "Organelle_Finder" should be located in the plugins dropdown in the menu (scroll to the bottom section of Plugins).
+Restart Fiji, now the "Organelle_Finder" should be located in the plugins dropdown in the menu. In the Fiji menu go to Plugins > Organelle_Finder and select `OrganelleFinder Initialize`, this will run an initialization which will point the scripts to the location of the 'Organelle_Finder' folder you created. If the folder cannot be located automatically, you will have to navigate to the 'Organelle_Finder' folder in the popup window (example shown below).
 
 You must have an image open for the program to run, the program automatically takes the top-most image available (i.e. the most recently clicked-on image).
 

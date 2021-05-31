@@ -31,7 +31,9 @@ If the initialization failed, the following window will appear. This indicates t
 
 ![Initialization passed window](https://github.com/NickiShaw/Fiji_Organelle_Identifier/blob/main/Images/Initializer_failed.jpg)
 
+Now restart Fiji a second time, the Run file will now contain the path which allows it to access the helper file.
 
+:tada: Initialization is now complete! :tada:
 
 You must have an image open for the program to run, the program automatically takes the top-most image available (i.e. the most recently clicked-on image).
 

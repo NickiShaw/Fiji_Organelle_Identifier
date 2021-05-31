@@ -17,7 +17,7 @@ Download the [Organelle_Finder](https://github.com/NickiShaw/Fiji_Organelle_Iden
 
 Restart Fiji, now the "Organelle_Finder" should be located in the plugins dropdown in the menu. In the Fiji menu go to Plugins > Organelle_Finder and select `OrganelleFinder Initialize`, this will run an initialization which will point the scripts to the location of the 'Organelle_Finder' folder you created. If the folder cannot be located automatically, you will have to navigate to the 'Organelle_Finder' folder in the popup window (example shown below).
 
-![Initialization manual search window](https://github.com/NickiShaw/Fiji_Organelle_Identifier/blob/main/Images/Initializer_window_1.jpg)
+<img src="https://github.com/NickiShaw/Fiji_Organelle_Identifier/blob/main/Images/Initializer_window_1.jpg" alt="Initialization manual search window" width="200"/>
 
 In this case toggle to the 'Organelle_Finder' as shown below:
 ![Initialization manual search window in directory](https://github.com/NickiShaw/Fiji_Organelle_Identifier/blob/main/Images/Initializer_window_2.jpg)

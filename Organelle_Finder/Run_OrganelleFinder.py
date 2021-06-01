@@ -34,6 +34,14 @@ output_lines = []
 
 img = IJ.getImage() # use open image.
 
+# Check that image is 8-bit greyscale.
+if img.getType() != 0: # 0 = GRAY8, 1 = GRAY16, 2 = GRAY32, 3= COLOR_256, 4 = COLOR_RGB
+	img_error = GenericDialogPlus("Analysis Complete")
+	img_error.addMessage("Please provide an 8-bit greyscale image")
+	img_error.addMessage("Ending program")
+	img_error.showDialog()
+	sys.exit("Image provided was not 8-bit greyscale image")
+
 # Get file type to match saved file at end (won't work for incomplete file names).
 try:
 	input_filetype = str(img.getTitle()).rsplit('.')[1]
@@ -219,36 +227,43 @@ while cont != "No, finish program":
 		
 		range_size = 10
 		# Add in new ROIs.
+		failed_ROIs = 0
+		# For each drawn ROI, locate the largest contour.
 		for elem in add_rois:
-			added_contours += 1
+			larger_candidate_cnt = True
 			_,_,w,h = elem
 			manual_ROI = ContourUtils.getManualSingleROI(elem, imgd)
-			manual_contour, _, intensity_value  = ContourUtils.getSingleVariableContours(manual_ROI, "auto")
-			manual_contours = ContourUtils.processSingleROI(manual_contour, manual_ROI, elem, min_prtcle_size*0.3, max(img_width, img_height))
-			larger_candidate_cnt = False
+			manual_contour, intensity_value  = ContourUtils.getSingleVariableContours(manual_ROI, "auto")
+			# Try the original threshold with the specific ROI.
+			manual_contours = ContourUtils.processSingleROI(manual_contour, manual_ROI, elem, 0, max(img_width, img_height))
 			min_contour_length = max(w, h) * 0.5
+			# Decide whether to try over range, if any contour is a good enough size and circularity, it passes.
+			# If no contours were found, automatically continues to range loop.
 			for i in range(manual_contours.size()):
-				height = minAreaRect(manual_contours.get(i)).size().height()
-				width = minAreaRect(manual_contours.get(i)).size().width()
-				if max(height, width) > min_contour_length:
-					larger_candidate_cnt = True
-			# If the inital search did not yield a long enough contour try over range and return largest.
+				_, _, circularity, _, length = ContourFindUtils.contourStats(manual_contours.get(i))
+				if length > min_contour_length and circularity > 0.6:
+					retained_contours.push_back(manual_contours.get(i))
+					added_contours += 1
+					# Skip range loop if a sufficient contour was found.		
+					larger_candidate_cnt = False
+			# If the inital search did not yield a good enough contour try over range and return largest/most circular.
 			if larger_candidate_cnt:
 				contours_in_range = MatVector()
 				for factor in range(-int(range_size/2), int(range_size/2), 2):
-					manual_contour, _, _  = ContourUtils.getSingleVariableContours(manual_ROI, intensity_value - 5 + factor)
-					manual_contours = ContourUtils.processSingleROI(manual_contour, manual_ROI, elem, min_prtcle_size*0.3, max(img_width, img_height))
-					# Get largest contour from manual_contours.
-					max_area = ContourUtils.largestContourIndex(manual_contours)
-					contours_in_range.push_back(manual_contours.get(max_area))
+					manual_contour, _  = ContourUtils.getSingleVariableContours(manual_ROI, intensity_value - 5 + factor)
+					manual_contours = ContourUtils.processSingleROI(manual_contour, manual_ROI, elem, 0, max(img_width, img_height))
+					if manual_contours.size() != 0:
+						# Add detected contours to master MatVector for whole range.
+						for i in range(manual_contours.size()):
+							contours_in_range.push_back(manual_contours.get(i))
 				if contours_in_range.size() > 0:
-					max_area_in_range = ContourUtils.largestContourIndex(contours_in_range)
-					retained_contours.push_back(contours_in_range.get(max_area_in_range))
-			# If initial search was sucessful push the largest contour only.
-			else:
-				passing_cnt = ContourUtils.largestContourIndex(manual_contours)
-				retained_contours.push_back(manual_contours.get(passing_cnt))
-			
+					best_contour_idx = ContourUtils.bestContourIndex(contours_in_range)
+					retained_contours.push_back(contours_in_range.get(best_contour_idx))
+					added_contours += 1
+				else:
+					failed_ROIs += 1
+
+		
 		# Add any manually drawn mitochondria.
 		for elem in manual_mitos:
 			drawn_contours += 1
@@ -262,7 +277,13 @@ while cont != "No, finish program":
 		drawContours(man_filtered_img, retained_contours, -1, Scalar(255,0,0,0), 2, -1, Mat(), 2, Point(0,0))
 		ImagePlus("manually filtered final", mat2ip.toImageProcessor(man_filtered_img)).show()
 		filtered_contours = retained_contours
-		
+		# Print message if a ROI didn't return any contours.
+		if failed_ROIs > 0:
+			contour_error = GenericDialogPlus("Manual contour error")
+			contour_error.addMessage(str(failed_ROIs) + " contours couldn't be detected")
+			contour_error.addMessage("Try manual drawing")
+			contour_error.showDialog()
+			
 		cont = guiManager.manualOptions("Any more edits to make?")
 
 	# Procedure for manual selection mode.

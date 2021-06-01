@@ -602,14 +602,14 @@ class pixelBounds:
 class ContourUtils:
 
 	@staticmethod		
-	def largestContourIndex(contours_matvec):
-		contour_sizes = {}
-		for contour_idx in range(contours_matvec.size()):
-			area = contourArea(contours_matvec.get(contour_idx))
-			contour_sizes[contour_idx] = area
-		max_area = max(contour_sizes.values())
-		max_contour_index = contour_sizes.keys()[contour_sizes.values().index(max_area)]
-		return max_contour_index
+	def bestContourIndex(contours_matvec):
+		contour_ratings = {}
+		for i in range(contours_matvec.size()):
+			area, _, circularity, _, _ = ContourFindUtils.contourStats(contours_matvec.get(i))
+			contour_ratings[i] = area * circularity
+		max_rating = max(contour_ratings.values())
+		best_contour_index = contour_ratings.keys()[contour_ratings.values().index(max_rating)]
+		return best_contour_index
 		
 	@staticmethod		
 	def moveContours(contours, offsetx, offsety, appending_metvec):
@@ -1042,8 +1042,7 @@ class ContourUtils:
 		contours = MatVector()
 		findContours(img_matrix, contours, RETR_LIST, CHAIN_APPROX_NONE)
 
-
-		return contours, output_ROI, avg_intensity
+		return contours, avg_intensity
 
 class ContourFindUtils:
 	@staticmethod
@@ -1086,6 +1085,19 @@ class ContourFindUtils:
 		rect.points(poi)
 		return rect
 
+	@staticmethod
+	def contourStats(contour):
+		rect = ContourFindUtils.getRotatedRectangle(contour)
+		# Get areas of mitos.
+		area = contourArea(contour)
+		# Get perimeter of mitos.
+		perim = arcLength(contour, True)
+		# Calculate circularities.
+		circularity = (4 * math.pi * area)/(perim * perim)
+		width = min(rect.size().height(), rect.size().width())
+		length = max(rect.size().height(), rect.size().width())
+		return area, perim, circularity, width, length
+
 	# Filter by determined parameters.
 	@staticmethod
 	def filterContoursbyManualOptions(mito_contours, imgd, filtering_dict):
@@ -1096,16 +1108,8 @@ class ContourFindUtils:
 				
 		for i in range(mito_contours.size()):
 			if not all([filtering_dict['circularity_filter'][0], filtering_dict['maxlen_filter'][0], filtering_dict['minlen_filter'][0], filtering_dict['ratio_filter'][0], filtering_dict['minarea_filter'][0], filtering_dict['maxarea_filter'][0]]):
-				rect = ContourFindUtils.getRotatedRectangle(mito_contours.get(i))
-				# Get areas of mitos.
-				area = contourArea(mito_contours.get(i))
-				# Get perimeter of mitos.
-				perim = arcLength(mito_contours.get(i), True)
-				# Calculate circularities.
-				circularity = (4 * math.pi * area)/(perim * perim)
-				width = min(rect.size().height(), rect.size().width())
-				length = max(rect.size().height(), rect.size().width())
-				
+				area, perim, circularity, width, length = ContourFindUtils.contourStats(mito_contours.get(i))
+
 				if length > 0:
 					ratio = float(width)/float(length)
 				else:

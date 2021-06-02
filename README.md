@@ -37,7 +37,7 @@ Now restart Fiji a second time, the Run file will now contain the path which all
 
 You must have an image open for the program to run, the program automatically takes the top-most image available (i.e. the most recently clicked-on image).
 
-:bangbang: **The input image must be 8-bit (grayscale), if it is not a window will popup to remind you. ** You can easily convert your photo in Fiji by selecting `Image > Type > 8-bit`.
+:bangbang: *The input image must be 8-bit (grayscale), if it is not a window will popup to remind you.*  You can easily convert your photo in Fiji by selecting `Image > Type > 8-bit`.
 
 ## Features
 

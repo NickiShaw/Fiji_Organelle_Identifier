@@ -2,6 +2,7 @@
 from ij	import IJ, ImagePlus
 from ij.gui import Line, Plot
 import math
+import csv
 import gc
 from ij.plugin.frame import RoiManager
 from ij.process import ImageProcessor
@@ -13,13 +14,15 @@ from ij.gui import GenericDialog, Roi, Line, Plot, PointRoi, NewImage, MessageDi
 from ijopencv.opencv import MatImagePlusConverter as mat2ip
 from ij.plugin import MontageMaker
 from ij.plugin.filter import GaussianBlur, EDM
+from fiji.util.gui import GenericDialogPlus
+from java.awt.event import ActionListener, ItemListener, ItemEvent
+from java.awt import GridLayout
 import threading
 import sys
 import time
 
-
 def filterbyItem(listItem, value, comparison):
-	if not listItem[0]: # pass if the criterion should be evaluated.
+	if listItem[0]: # pass if the criterion should be evaluated.
 		if comparison == "smaller than":
 			if value < listItem[1]:
 				return True
@@ -895,9 +898,6 @@ class ContourUtils:
 			cornered_bucket_cnts, filtered_buckets, imgmat = ContourUtils.filterBuckets(buckets, cnt_points, cnts, ROIcolmat, min_prtcle_size, max_prtcle_size, True)
 			found_cnt_mat, ROI_contours = ContourUtils.cleanDrawContours(cnts, final_mat, filtered_buckets, roiwidth, roiheight, min_prtcle_size, max_prtcle_size)
 			out_firstfound_cnt_vect.push_back(found_cnt_mat)
-
-			del final_mat
-			gc.collect()
 			
 			# Move ROI contours to position of image and append to final_contours_mat.
 			offsetx = ROI_range[ind][0]
@@ -1148,6 +1148,27 @@ class ContourFindUtils:
 		ImagePlus("Mitochondria blob", mat2ip.toImageProcessor(img_mat)).show()
 
 
+class ButtonClic(ActionListener):
+	def __init__(self, imgd, filtered_contours):
+		self.imgd = imgd
+		self.filtered_contours = filtered_contours
+	def actionPerformed(self, event):
+		outputInitialImgandContourData(self.imgd, self.filtered_contours)
+
+class checkboxListener(ItemListener):
+	def __init__(self, gui, numericFieldIndex):
+			self.gui = gui
+			self.numericFieldIndex = numericFieldIndex 
+	def itemStateChanged(self, event):
+		enabled = event.getStateChange() == ItemEvent.SELECTED
+		self.gui.getNumericFields()[self.numericFieldIndex].setEnabled(enabled)
+
+#gui = GenericDialogPlus("GUI with custom buttons")
+#gui.addButton("A", ButtonClic() ) # We associate the button objects to some instance of the ButtonClic class
+#gui.addButton("B", ButtonClic() )
+#gui.showDialog()
+
+
 class guiManager:
 
 	@staticmethod
@@ -1231,47 +1252,51 @@ class guiManager:
 			return gui_out
 
 	@staticmethod
-	def FilteringOptionsMenu(question_text):
-		gui = NonBlockingGenericDialog("Filtering")
-		gui.addNumericField("Ratio filtering (x:1) =", 0.5)
-		gui.addCheckbox("No ratio filtering ", False)
-		gui.addNumericField("Circularity filtering (x/1) =", 0.5)
-		gui.addCheckbox("No circularity filtering ", False)
-		gui.addNumericField("Maximum area  =", 100)
-		gui.addCheckbox("No maximum area filtering ", True)
-		gui.addNumericField("Minimum area =", 100)
-		gui.addCheckbox("No minimum area filtering ", True)
-		gui.addNumericField("Maximum length (px) =", 100)
-		gui.addCheckbox("No maximum length filtering ", True)
-		gui.addNumericField("Minimum length (px) =", 100)
-		gui.addCheckbox("No minimum length filtering ", True)
-		gui.addNumericField("Maximum intensity (x/255) =", 100)
-		gui.addCheckbox("No maximum intensity filtering ", True)
-		gui.addNumericField("Minimum intensity (x/255) =", 100)
-		gui.addCheckbox("No minimum intensity filtering ", True)
+	def getFilteringOptions():
+		return [
+			("ratio_filter", "Ratio filtering (x:1)", 0.5, True),
+			("circularity_filter", "Circularity filtering (x/1)", 0.5, True),
+			("maxarea_filter", "Maximum area (px^2)", 100, False),
+			("minarea_filter", "Minimum area (px^2)", 100, False),
+			("maxlen_filter", "Maximum length (px)", 100, False),
+			("minlen_filter", "Minimum length (px)", 100, False),
+			("maxinten_filter", "Maximum intensity (x/255)", 100, False),
+			("mininten_filter", "Minimum intensity (x/255)", 100, False)
+		]
+
+
+	@staticmethod
+	def FilteringOptionsMenu(question_text, imgd, filtered_contours):
+		gui = GenericDialogPlus("Filtering")
+		opts = guiManager.getFilteringOptions()
+		gui.addButton("Export mitochindria data and image", ButtonClic(imgd, filtered_contours))
+		gui.setLayout(GridLayout(len(opts) + 3 , 2))
+		gui.addChoice("", ["a","b"],"a")
+		gui.getChoices().get(0).setVisible(False)
+		idx = 0
+		for opt in opts:
+			gui.addNumericField(opt[1], opt[2])
+			gui.addCheckbox("", opt[3])
+			gui.getNumericFields().get(idx).setEnabled(opt[3])
+			gui.getCheckboxes().get(idx).addItemListener(checkboxListener(gui, idx))
+			idx = idx + 1
 		gui.showDialog()
 		if gui.wasOKed():
 			filtering_dict = {}
-			filtering_dict["ratio_filter"] = [gui.getNextBoolean(), gui.getNextNumber()]
-			filtering_dict["circularity_filter"] = [gui.getNextBoolean(), gui.getNextNumber()]
-			filtering_dict["maxarea_filter"] = [gui.getNextBoolean(), gui.getNextNumber()]
-			filtering_dict["minarea_filter"] = [gui.getNextBoolean(), gui.getNextNumber()]
-			filtering_dict["maxlen_filter"] = [gui.getNextBoolean(), gui.getNextNumber()]
-			filtering_dict["minlen_filter"] = [gui.getNextBoolean(), gui.getNextNumber()]
-			filtering_dict["maxinten_filter"] = [gui.getNextBoolean(), gui.getNextNumber()]
-			filtering_dict["mininten_filter"] = [gui.getNextBoolean(), gui.getNextNumber()]
+			for opt in opts:
+				filtering_dict[opt[0]] = [gui.getNextBoolean(), gui.getNextNumber()]
 			return filtering_dict
 		else:
 			return "Cancelled"
 
 	@staticmethod		
-	def filteringOptions(question_text):
-		gui_out = guiManager.FilteringOptionsMenu(question_text)
+	def filteringOptions(question_text, imgd, filtered_contours):
+		gui_out = guiManager.FilteringOptionsMenu(question_text, imgd, filtered_contours)
 		# Safety loop in case menu was cancelled by accident.
 		if gui_out == "Cancelled":
 			check_out = guiManager.ManualCheckExit("Return to filtering menu")
 			if check_out == "re-run menu":
-				gui_check = guiManager.FilteringOptionsMenu(question_text)
+				gui_check = guiManager.FilteringOptionsMenu(question_text, imgd, filtered_contours)
 				if gui_check == "Cancelled":
 					sys.exit("Menus were cancelled twice in a row, automatically ending program")
 				else:
@@ -1436,4 +1461,88 @@ class guiManager:
 		
 		return altered_contours
 
+def outputInitialImgandContourData(imgd, filtered_contours):
+	# Draw final image with numbers on contours.
+	_, _, final_numbered_img = ImgUtils.convertImgColour(imgd, "GRAY2RGB")
+	drawContours(final_numbered_img, filtered_contours, -1, Scalar(255,0,0,0), 2, -1, Mat(), 2, Point(0,0))
+	for j in range(filtered_contours.size()):
+		M = CvMoments()
+		cvMoments(CvMat(filtered_contours.get(j)), M)
+		if M.m00() != 0:
+			cx = int(M.m10()/M.m00())
+			cy = int(M.m01()/M.m00())
+			putText(final_numbered_img, str(j+1), Point(cx,cy),0,0.6,Scalar(0,0,0,255),2,0,False)
+	final_imgplus = ImagePlus("Final", mat2ip.toImageProcessor(final_numbered_img))
+	final_imgplus.show()
 	
+	all_contour_points = ContourUtils.getInteriorContoursPoints(filtered_contours, imp2mat.toMat(imgd.getProcessor()))
+	contour_center_locations = []
+	contour_lengths = []
+	contour_widths = []
+	contour_areas = []
+	contour_perims = []
+	contour_circularities = []
+	contour_intensities = []
+
+	for j in range(filtered_contours.size()):
+		
+		# Get dimensions of mitos.
+		rect = minAreaRect(filtered_contours.get(j))
+		poi = Point2f(8)
+		rect.points(poi)			
+		width = rect.size().width()
+		height = rect.size().height()
+		contour_lengths.append(max(width, height))
+		contour_widths.append(min(width, height))
+	
+		# Get areas of mitos.
+		area = contourArea(filtered_contours.get(j))
+		contour_areas.append(area)
+	
+		# Get perimeter of mitos.
+		perim = arcLength(filtered_contours.get(j), True)
+		contour_perims.append(perim)
+	
+		# Calculate circularities.
+		circularity = (4 * math.pi * area)/(perim * perim)
+		contour_circularities.append(circularity)
+	
+		# Get intensities.
+		intensities = ContourUtils.getContourIntensities(all_contour_points[j], imgd)
+		avg_inten = sum(intensities)/len(intensities)
+		contour_intensities.append(avg_inten)
+	
+	
+		# Get centers.
+		M = CvMoments()
+		cvMoments(CvMat(filtered_contours.get(j)), M)
+		if M.m00() != 0:
+			cx = int(M.m10()/M.m00())
+			cy = int(M.m01()/M.m00())
+			contour_center_locations.append((cx,cy))
+		else:
+			contour_center_locations.append((0,0))
+			
+	# Get output file path.
+	gui = GenericDialogPlus("Save Spreadsheet")
+	gui.addFileField("Choose file path", None)
+	gui.hideCancelButton()
+	gui.showDialog()
+	if gui.wasOKed():
+		base_filename = str(gui.getNextString())
+		if base_filename != "":
+			output_spreadheet_path = base_filename + ".csv"
+		
+			# Write data to spreadsheet.
+			try:
+				with open(output_spreadheet_path, mode='wb') as csv_file:
+				    fieldnames = ['Count', 'Average Intensity', 'Cicularity', 'Length (px)', 'Width (px)', 'Area (px^2)', 'Perimeter (px)', 'Location']
+				    Writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+				    Writer.writeheader()
+				    for i in range(filtered_contours.size()):
+				        Writer.writerow({'Count': i+1, 'Average Intensity': contour_intensities[i],
+				                         'Cicularity': contour_circularities[i], 'Length (px)': contour_lengths[i],
+				                         'Width (px)': contour_widths[i], 'Area (px^2)': contour_areas[i], 'Perimeter (px)': contour_perims[i],
+				                         'Location': contour_center_locations[i]})
+			except:
+				pass

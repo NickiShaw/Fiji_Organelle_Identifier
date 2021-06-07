@@ -25,6 +25,7 @@ import time
 
 from OrganelleFinder_helper import *
 
+
 # List for settings record.
 output_lines = []
 
@@ -122,8 +123,7 @@ if autoprocessing:
 	# Draw full image with edge mitochondria.
 	out_mat = ROIUtils.ROItoImage(sliced_cnt_vect, num_across, num_down) ##
 	edge_img = ImagePlus("Edges - tbd", mat2ip.toImageProcessor(out_mat))
-	del out_mat
-	del sliced_cnt_vect
+
 	
 	# For edge image find contours and continue to assign buckets and filter.
 	edge_colored_image, edge_img_matrix, _ =  ImgUtils.convertImgColour(edge_img, "GRAY2RGB")
@@ -132,12 +132,12 @@ if autoprocessing:
 	edge_cnt_points, edge_buckets = ContourUtils.contours2buckets(edge_contours, 0.15)
 	img_matrix = img_mat.clone()
 	_, edge_filtered_buckets, bucket_mat = ContourUtils.filterBuckets(edge_buckets, edge_cnt_points, edge_contours, img_matrix, min_prtcle_size, max_prtcle_size, True)
-	del img_matrix
+
 	
 	# Get clean contours for this final assignment of edge contours.
 	second_final_mat =  img_mat.clone()
 	second_cnt_mat, return_contours = ContourUtils.cleanDrawContours(edge_contours, second_final_mat, edge_filtered_buckets, img_width, img_height, min_prtcle_size, max_prtcle_size)
-	del second_final_mat
+
 	
 	# Draw edge contours on final image.
 	drawContours(allfinalcnts_mat, return_contours, -1, Scalar(255,0,0,0), 2, -1, Mat(), 2, Point(0,0))
@@ -148,8 +148,7 @@ if autoprocessing:
 	# Show final image with all sucessful contours.
 	allfinalcnts_ip  = mat2ip.toImageProcessor(allfinalcnts_mat)
 	allfinalcnts = ImagePlus("final image", allfinalcnts_ip)
-	del allfinalcnts_mat
-	gc.collect()
+
 
 	# Show combined unfiltered.
 	both_img = img_mat.clone()
@@ -159,7 +158,7 @@ if autoprocessing:
 	# Filter all contours given manual inputs.
 	continueorReFilter = "Return"
 	while continueorReFilter == "Return":
-		filtering_dict = guiManager.filteringOptions("Filtering options")
+		filtering_dict = guiManager.filteringOptions("Filtering options", imgd, final_contours_mat)
 		if filtering_dict != "Finish program":
 			filtered_img = img_mat.clone()
 			filtered_contours = ContourFindUtils.filterContoursbyManualOptions(final_contours_mat, imgd, filtering_dict)
@@ -366,12 +365,12 @@ contour_intensities = []
 label = []
 
 
-all_contour_points = ContourUtils.getInteriorContoursPoints(filtered_contours, imp2mat.toMat(imgd.getProcessor()))
-
 # If lipid_threshold is not set, default to 150.
 if lipid_threshold == None:
 	lipid_threshold = 150
 
+
+all_contour_points = ContourUtils.getInteriorContoursPoints(filtered_contours, imp2mat.toMat(imgd.getProcessor()))
 for j in range(filtered_contours.size()):
 	
 	# Get dimensions of mitos.
